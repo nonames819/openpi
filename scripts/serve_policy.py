@@ -59,19 +59,20 @@ class Args:
 DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
     EnvMode.ALOHA: Checkpoint(
         config="pi05_aloha",
-        dir="gs://openpi-assets/checkpoints/pi05_base",
+        dir="/inspire/hdd/project/autoregressive-video-generation/niuyuchen-253108120111/chd/projects/openpi/ckpt_down/pi05_base",
     ),
     EnvMode.ALOHA_SIM: Checkpoint(
         config="pi0_aloha_sim",
-        dir="gs://openpi-assets/checkpoints/pi0_aloha_sim",
+        dir="/inspire/hdd/project/autoregressive-video-generation/niuyuchen-253108120111/chd/projects/openpi/ckpt_down/pi0_aloha_sim",
     ),
     EnvMode.DROID: Checkpoint(
         config="pi05_droid",
-        dir="gs://openpi-assets/checkpoints/pi05_droid",
+        dir="/inspire/hdd/project/autoregressive-video-generation/niuyuchen-253108120111/chd/projects/openpi/ckpt_down/pi05_droid",
     ),
     EnvMode.LIBERO: Checkpoint(
         config="pi05_libero",
-        dir="gs://openpi-assets/checkpoints/pi05_libero",
+        # dir="/inspire/hdd/project/autoregressive-video-generation/niuyuchen-253108120111/chd/projects/openpi/ckpt_down/pi05_libero",
+        dir="/inspire/hdd/project/autoregressive-video-generation/niuyuchen-253108120111/chd/projects/openpi/checkpoints/pi05_libero/my_experiment/29999",
     ),
 }
 

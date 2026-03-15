@@ -210,7 +210,7 @@ class _Module(nn.Module):
 
         # Kevin edit: do patch extraction and posemb in float32,
         # because I feel like it's a bit safer.
-        image = jnp.asarray(image, jnp.float32)
+        image = jnp.asarray(image, jnp.float32) # B,224,224,3
 
         # Patch extraction
         x = out["stem"] = nn.Conv(
@@ -222,7 +222,7 @@ class _Module(nn.Module):
             dtype=jnp.float32,
         )(image)
 
-        n, h, w, c = x.shape
+        n, h, w, c = x.shape # (256, 16, 16, 1152)
         x = jnp.reshape(x, [n, h * w, c])
 
         # Add posemb before adding extra token.
@@ -287,7 +287,7 @@ class _Module(nn.Module):
             x_2d = out["logits_2d"] = head(x_2d)
             x = out["logits"] = head(x)
 
-        return x, out
+        return x, out # x:(256, 256, 2048) 
 
 
 def Module(num_classes=None, *, variant=None, **kw):  # pylint: disable=invalid-name  # noqa: N802

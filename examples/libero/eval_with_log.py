@@ -3,6 +3,7 @@ import dataclasses
 import logging
 import math
 import pathlib
+from datetime import datetime
 
 import imageio
 from libero.libero import benchmark
@@ -34,13 +35,14 @@ class Args:
     task_suite_name: str = (
         "libero_10"  # Task suite. Options: libero_spatial, libero_object, libero_goal, libero_10, libero_90
     )
-    num_steps_wait: int = 10  # Number of steps to wait for objects to stabilize i n sim
+    num_steps_wait: int = 10  # Number of steps to wait for objects to stabilize in sim
     num_trials_per_task: int = 50  # Number of rollouts per task
 
     #################################################################################################################
     # Utils
     #################################################################################################################
     video_out_path: str = "data/libero/videos"  # Path to save videos
+    log_out_path: str = "/inspire/hdd/project/autoregressive-video-generation/niuyuchen-253108120111/chd/projects/openpi/checkpoints/pi05_libero/my_experiment/29999/eval_log"  # Path to save log files
 
     seed: int = 7  # Random Seed (for reproducibility)
 
@@ -215,5 +217,29 @@ def _quat2axisangle(quat):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    tyro.cli(eval_libero)
+    # 先解析参数以获取 log_out_path
+    args = tyro.cli(Args)
+    
+    # 创建日志目录
+    pathlib.Path(args.log_out_path).mkdir(parents=True, exist_ok=True)
+    
+    # 生成带时间戳的日志文件名
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    log_filename = pathlib.Path(args.log_out_path) / f"eval_{args.task_suite_name}_{timestamp}.log"
+    
+    # 配置日志:同时输出到文件和终端
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_filename, mode='w'),  # 文件输出
+            logging.StreamHandler()  # 终端输出
+        ]
+    )
+    
+    # 记录开始信息
+    logging.info(f"Logging to file: {log_filename}")
+    logging.info(f"Experiment arguments: {args}")
+    
+    # 运行评估
+    eval_libero(args)

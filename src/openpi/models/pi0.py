@@ -129,10 +129,10 @@ class Pi0(_model.BaseModel):
             tokenized_inputs = self.PaliGemma.llm(obs.tokenized_prompt, method="embed")
             tokens.append(tokenized_inputs)
             input_mask.append(obs.tokenized_prompt_mask)
-            # full attention between image and language inputs
+            # full attention between image and language inputs (chd)
             ar_mask += [False] * tokenized_inputs.shape[1]
-        tokens = jnp.concatenate(tokens, axis=1)
-        input_mask = jnp.concatenate(input_mask, axis=1)
+        tokens = jnp.concatenate(tokens, axis=1) # (256, 968, 2048)
+        input_mask = jnp.concatenate(input_mask, axis=1) # (256, 968)
         ar_mask = jnp.array(ar_mask)
         return tokens, input_mask, ar_mask
 
@@ -156,9 +156,9 @@ class Pi0(_model.BaseModel):
             # image/language inputs do not attend to state or actions
             ar_mask += [True]
 
-        action_tokens = self.action_in_proj(noisy_actions)
+        action_tokens = self.action_in_proj(noisy_actions) # 256,10,32->256,10,1024
         # embed timestep using sine-cosine positional encoding with sensitivity in the range [0, 1]
-        time_emb = posemb_sincos(timestep, self.action_in_proj.out_features, min_period=4e-3, max_period=4.0)
+        time_emb = posemb_sincos(timestep, self.action_in_proj.out_features, min_period=4e-3, max_period=4.0) # 256,1024
         if self.pi05:
             # time MLP (for adaRMS)
             time_emb = self.time_mlp_in(time_emb)
@@ -211,7 +211,7 @@ class Pi0(_model.BaseModel):
         )
         v_t = self.action_out_proj(suffix_out[:, -self.action_horizon :])
 
-        return jnp.mean(jnp.square(v_t - u_t), axis=-1)
+        return jnp.mean(jnp.square(v_t - u_t), axis=-1) # [256,10,32]
 
     @override
     def sample_actions(
@@ -234,7 +234,7 @@ class Pi0(_model.BaseModel):
         prefix_tokens, prefix_mask, prefix_ar_mask = self.embed_prefix(observation)
         prefix_attn_mask = make_attn_mask(prefix_mask, prefix_ar_mask)
         positions = jnp.cumsum(prefix_mask, axis=1) - 1
-        _, kv_cache = self.PaliGemma.llm([prefix_tokens, None], mask=prefix_attn_mask, positions=positions)
+        _, kv_cache = self.PaliGemma.llm([prefix_tokens, None], mask=prefix_attn_mask, positions=positions) # vlm部分只要kv_cache
 
         def step(carry):
             x_t, time = carry
@@ -243,10 +243,10 @@ class Pi0(_model.BaseModel):
             )
             # `suffix_attn_mask` is shape (b, suffix_len, suffix_len) indicating how the suffix tokens can attend to each
             # other
-            suffix_attn_mask = make_attn_mask(suffix_mask, suffix_ar_mask)
+            suffix_attn_mask = make_attn_mask(suffix_mask, suffix_ar_mask) # bs,10,10
             # `prefix_attn_mask` is shape (b, suffix_len, prefix_len) indicating how the suffix tokens can attend to the
             # prefix tokens
-            prefix_attn_mask = einops.repeat(prefix_mask, "b p -> b s p", s=suffix_tokens.shape[1])
+            prefix_attn_mask = einops.repeat(prefix_mask, "b p -> b s p", s=suffix_tokens.shape[1]) # [bs,10,968]
             # `combined_mask` is shape (b, suffix_len, prefix_len + suffix_len) indicating how the suffix tokens (which
             # generate the queries) can attend to the full prefix + suffix sequence (which generates the keys and values)
             full_attn_mask = jnp.concatenate([prefix_attn_mask, suffix_attn_mask], axis=-1)
@@ -255,7 +255,7 @@ class Pi0(_model.BaseModel):
                 suffix_tokens.shape[1],
                 prefix_tokens.shape[1] + suffix_tokens.shape[1],
             )
-            # `positions` is shape (b, suffix_len) indicating the positions of the suffix tokens
+            # `positions` is shape (b, suffix_len) indicating the positions of the suffix tokens, chd: 用来计算绝对位置下标，因为前面的968维已经用vl放好了
             positions = jnp.sum(prefix_mask, axis=-1)[:, None] + jnp.cumsum(suffix_mask, axis=-1) - 1
 
             (prefix_out, suffix_out), _ = self.PaliGemma.llm(
@@ -264,7 +264,7 @@ class Pi0(_model.BaseModel):
                 positions=positions,
                 kv_cache=kv_cache,
                 adarms_cond=[None, adarms_cond],
-            )
+            ) # chd: only process action part
             assert prefix_out is None
             v_t = self.action_out_proj(suffix_out[:, -self.action_horizon :])
 

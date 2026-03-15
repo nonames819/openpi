@@ -171,9 +171,9 @@ class Attention(nn.Module):
 
         qkvs = []
         for i, (x, config) in enumerate(zip(xs, self.configs, strict=True)):
-            if x is None:
+            if x is None: # shape convert operation
                 continue
-            if config.num_kv_heads == config.num_heads:
+            if config.num_kv_heads == config.num_heads: # 1 != 8
                 qkv_einsum = lora.Einsum(
                     shape=(3, config.num_heads, config.width, config.head_dim),
                     name=_name("qkv_einsum", i),
@@ -198,23 +198,23 @@ class Attention(nn.Module):
                 k, v = kv_einsum("BSD,2KDH->2BSKH", x)
                 qkvs.append((q, k, v))
 
-        q, k, v = (jnp.concatenate(y, axis=1) for y in zip(*qkvs, strict=True))
+        q, k, v = (jnp.concatenate(y, axis=1) for y in zip(*qkvs, strict=True)) # xs[0].q - [256,968,8,256] (vlm)  xs[1].q - [256,10,8,256] (ae) 
 
         q = _apply_rope(q, positions=positions)
         q *= self.configs[0].head_dim ** -0.5
 
-        k = _apply_rope(k, positions=positions)
+        k = _apply_rope(k, positions=positions) # [256,978,1,256]/[bs,10,1,256] vlm/ae
 
         # should still be half-precision here (if input was half-precision)
         assert q.dtype == k.dtype == v.dtype == dtype
 
         if kv_cache is not None:
-            cache_k, cache_v = kv_cache
+            cache_k, cache_v = kv_cache # both [bs,968,1,256] kvcache is extracted from the specific layer from the 18 layers
             k = jnp.concatenate([cache_k, k], axis=1)
             v = jnp.concatenate([cache_v, v], axis=1)
 
-        q = einops.rearrange(q, "B T (K G) H -> B T K G H", K=self.configs[0].num_kv_heads)
-        logits = jnp.einsum("BTKGH,BSKH->BKGTS", q, k, preferred_element_type=jnp.float32)
+        q = einops.rearrange(q, "B T (K G) H -> B T K G H", K=self.configs[0].num_kv_heads) # [256,978,1,8,256]
+        logits = jnp.einsum("BTKGH,BSKH->BKGTS", q, k, preferred_element_type=jnp.float32) # [256,1,8,978,978]
 
         if attn_mask.shape != (q.shape[0], 1, q.shape[1], k.shape[1]):
             raise ValueError(
@@ -228,11 +228,11 @@ class Attention(nn.Module):
         probs = jax.nn.softmax(masked_logits, axis=-1).astype(dtype)
 
         encoded = jnp.einsum("BKGTS,BSKH->BTKGH", probs, v)
-        encoded = einops.rearrange(encoded, "B T K G H -> B T (K G) H")
+        encoded = einops.rearrange(encoded, "B T K G H -> B T (K G) H") # [256,978,8,256]
 
         out = []
         start = 0
-        for i, (x, config) in enumerate(zip(xs, self.configs, strict=True)):
+        for i, (x, config) in enumerate(zip(xs, self.configs, strict=True)): # chd: project output to init size
             if x is not None:
                 end = start + x.shape[1]
                 out_einsum = lora.Einsum(
@@ -241,12 +241,12 @@ class Attention(nn.Module):
                     init_fn=nn.initializers.lecun_normal(in_axis=(-3, -2), out_axis=-1),
                     lora_config=config.lora_configs.get("attn"),
                 )
-                out.append(out_einsum("BTNH,NHD->BTD", encoded[:, start:end]))
+                out.append(out_einsum("BTNH,NHD->BTD", encoded[:, start:end])) # [256,968,2048], [256,10,1024]
                 start = end
             else:
                 out.append(None)
 
-        return out, (k, v)
+        return out, (k, v) # vlm kv: [bs,968,1,256]
 
 
 @at.typecheck
@@ -402,7 +402,7 @@ class Module(nn.Module):
         if adarms_cond is None:
             adarms_cond = [None] * len(self.configs)
 
-        embedded, kv_cache = self.layers(embedded, kv_cache, positions, mask, adarms_cond, deterministic)
+        embedded, kv_cache = self.layers(embedded, kv_cache, positions, mask, adarms_cond, deterministic) # vl不部分只要kvcache
 
         assert all(e.dtype == jnp.dtype(self.embed_dtype) for e in embedded if e is not None)
 
@@ -425,8 +425,8 @@ def _apply_rope(x, *, positions, max_wavelength=10_000):
     """Applies RoPE positions [B, L] to x [B, L, H, D]."""
     freq_exponents = (2.0 / x.shape[-1]) * jnp.arange(x.shape[-1] // 2, dtype=jnp.float32)
     timescale = max_wavelength**freq_exponents
-    radians = positions[..., None] / timescale[None, None, :]
-    radians = radians[..., None, :]
+    radians = positions[..., None] / timescale[None, None, :] # bs,968,128
+    radians = radians[..., None, :] # add a dim at -2
     assert radians.dtype == jnp.float32
     # radians.shape = [...,L,1,d=D/2]
     sin, cos = jnp.sin(radians), jnp.cos(radians)
