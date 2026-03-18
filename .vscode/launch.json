@@ -1,0 +1,100 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug train jax",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/train.py",
+            "args": [
+                "pi05_libero_debug",
+                "--exp-name=debug_pi05_libero",
+                "--overwrite"
+            ],
+            "env": {
+                "XLA_PYTHON_CLIENT_MEM_FRACTION": "0.9"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Debug train torch (single GPU)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/train_pytorch.py",
+            "args": [
+                "pi05_libero_debug",
+                "--exp-name=debug_pi05_libero_pytorch",
+                "--save_interval=5",
+                "--batch_size=256",
+                "--overwrite"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Debug train torch (DDP)",
+            "type": "python",
+            "request": "launch",
+            "module": "torch.distributed.run",
+            "args": [
+                "--standalone",
+                "--nnodes=1",
+                "--nproc_per_node=4",
+
+                "scripts/train_pytorch.py",
+                "pi05_libero_debug",
+
+                "--exp-name=debug_pi05_libero_pytorch",
+                "--save_interval=5",
+                "--batch_size=256",
+                "--overwrite"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Debug serve policy",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/serve_policy.py",
+            "args": [
+                "--env=LIBERO",
+            ],
+            "env": {
+                "XLA_PYTHON_CLIENT_MEM_FRACTION": "0.2"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Debug libero evaluation",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/examples/libero/eval_with_log.py",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/examples/libero/.venv/bin/python",
+            "env": {
+                "MUJOCO_GL": "osmesa",
+                "PYTHONPATH":"${workspaceFolder}/third_party/libero"
+            },
+            "justMyCode": false
+        },
+        {
+            "name": "Debug compute_norm_stats",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/compute_norm_stats.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--config-name", "pi05_libero"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"  // 让脚本能找到包
+            }
+        },
+    ]
+}

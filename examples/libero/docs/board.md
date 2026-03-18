@@ -1,0 +1,1 @@
+MUJOCO_GL=osmesa PYTHONPATH=$PWD/../../third_party/libero python main.py
