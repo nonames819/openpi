@@ -61,3 +61,43 @@ input_mask: 根据是否有效来定
         output_max=(0.05, 0.05, 0.05, 0.5, 0.5, 0.5),
         output_min=(-0.05, -0.05, -0.05, -0.5, -0.5, -0.5),
 
+## training resource 
+
+single gpu bs=64
+after embedding prefix/suffix 9287MiB / 143771MiB
+after layer0 22653MiB / 143771MiB
+after loss 24589MiB / 143771MiB
+after backward 36363MiB / 143771MiB
+several step 50533MiB / 143771MiB
+大概稳定在49803MiB / 143771MiB
+
+
+
+single gpu bs=4
+34054 / 143771MiB
+forward: 0.0802614688873291 backward: 0.24120402336120605 (0.4~0.5s/it)
+
+single gpu bs=8
+34054 / 143771MiB
+forward: 0.12296175956726074 backward: 0.405914306640625 1.52it/s(0.658s/it)
+
+single gpu bs=16
+34446 / 143771MiB
+forward: 0.20833396911621094 backward: 0.7435786724090576 1.08s/it
+
+single gpu bs=32
+40760MiB / 143771MiB
+forward: 0.4006338119506836 backward: 1.4410548210144043 2.02s/it
+
+2gpu global bs=32
+39503MiB / 143771MiB 1.12s/it
+
+single gpu bs=64
+49803MiB / 143771MiB 30h single step time 3.62
+
+single gpu bs=128
+75420MiB / 143771MiB 60h single step time 7.11
+
+single gpu bs=256
+127020MiB / 143771MiB 120h
+

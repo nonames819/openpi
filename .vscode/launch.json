@@ -26,12 +26,15 @@
             "request": "launch",
             "program": "${workspaceFolder}/scripts/train_pytorch.py",
             "args": [
-                "pi05_libero_debug",
-                "--exp-name=debug_pi05_libero_pytorch",
-                "--save_interval=5",
+                "pi05_libero",
+                "--exp-name=pi05_libero_pytorch_1gpu_debug",
+                "--save_interval=100",
                 "--batch_size=256",
                 "--overwrite"
             ],
+            "env":{
+                "CUDA_VISIBLE_DEVICES":"1",
+            },
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -43,13 +46,13 @@
             "args": [
                 "--standalone",
                 "--nnodes=1",
-                "--nproc_per_node=4",
+                "--nproc_per_node=2",
 
                 "scripts/train_pytorch.py",
-                "pi05_libero_debug",
+                "pi05_libero",
 
-                "--exp-name=debug_pi05_libero_pytorch",
-                "--save_interval=5",
+                "--exp-name=pi05_libero_pytorch_multigpu_debug",
+                "--save_interval=5000",
                 "--batch_size=256",
                 "--overwrite"
             ],
@@ -65,7 +68,7 @@
                 "--env=LIBERO",
             ],
             "env": {
-                "XLA_PYTHON_CLIENT_MEM_FRACTION": "0.2"
+                "XLA_PYTHON_CLIENT_MEM_FRACTION": "0.7"
             },
             "console": "integratedTerminal",
             "justMyCode": true
@@ -79,6 +82,7 @@
             "python": "${workspaceFolder}/examples/libero/.venv/bin/python",
             "env": {
                 "MUJOCO_GL": "osmesa",
+                "CUDA_VISIBLE_DEVICES":"0",
                 "PYTHONPATH":"${workspaceFolder}/third_party/libero"
             },
             "justMyCode": false

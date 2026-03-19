@@ -203,6 +203,7 @@ if __name__ == "__main__":
     client = _websocket_client_policy.WebsocketClientPolicy(args.host, args.port)
     metadata = client.get_server_metadata()
     checkpoint_dir = pathlib.Path(metadata['checkpoint_dir'])
+    logging.info("Eval ckpt:", checkpoint_dir)
 
     # 构建输出目录
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')

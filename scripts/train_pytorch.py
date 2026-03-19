@@ -46,6 +46,8 @@ import openpi.shared.normalize as _normalize
 import openpi.training.config as _config
 import openpi.training.data_loader as _data
 
+from termcolor import cprint
+
 
 def init_logging():
     level_mapping = {"DEBUG": "D", "INFO": "I", "WARNING": "W", "ERROR": "E", "CRITICAL": "C"}
@@ -188,7 +190,32 @@ def save_checkpoint(model, optimizer, global_step, config, is_main, data_config)
         tmp_ckpt_dir.rename(final_ckpt_dir)
 
         logging.info(f"Saved checkpoint at step {global_step} -> {final_ckpt_dir}")
+        
+        # chd manager
+        if hasattr(config, "keep_period") and config.keep_period is not None:
+            all_ckpts = []
+            for p in config.checkpoint_dir.iterdir():
+                if p.is_dir() and p.name.isdigit():
+                    all_ckpts.append(int(p.name))
 
+            # checkpoints to keep
+            keep_set = set()
+
+            # 1. keep periodic checkpoints
+            for step in all_ckpts:
+                if step % config.keep_period == 0:
+                    keep_set.add(step)
+
+            # 2. always keep the latest one
+            keep_set.add(global_step)
+
+            # delete others
+            for step in all_ckpts:
+                if step not in keep_set:
+                    ckpt_path = config.checkpoint_dir / str(step)
+                    shutil.rmtree(ckpt_path)
+                    logging.info(f"Removed old checkpoint {ckpt_path}")
+                
         # Log checkpoint to wandb
         if config.wandb_enabled:
             wandb.log({"checkpoint_step": global_step}, step=global_step)
@@ -501,7 +528,7 @@ def train_loop(config: _config.TrainConfig):
 
     # Training loop - iterate until we reach num_train_steps
     pbar = (
-        tqdm.tqdm(total=config.num_train_steps, initial=global_step, desc="Training", disable=not is_main)
+        tqdm.tqdm(total=config.num_train_steps, initial=global_step, desc="Training", disable=not is_main, dynamic_ncols=True)
         if is_main
         else None
     )
@@ -524,9 +551,18 @@ def train_loop(config: _config.TrainConfig):
             # Update LR
             for pg in optim.param_groups:
                 pg["lr"] = lr_schedule(global_step)
+                
+            # torch.cuda.synchronize()
+            # start = time.time()
 
             # Forward pass
             losses = model(observation, actions)
+            
+            # torch.cuda.synchronize()
+            # t_forward = time.time() - start
+            # torch.cuda.synchronize()
+            # start = time.time()
+            
             # Ensure losses is a tensor and handle different return types
             if isinstance(losses, list | tuple):
                 losses = torch.stack(losses)
@@ -537,6 +573,10 @@ def train_loop(config: _config.TrainConfig):
 
             # Backward pass
             loss.backward()
+            
+            # torch.cuda.synchronize()
+            # t_backward = time.time() - start
+            # print("forward:", t_forward, "backward:", t_backward)
 
             # Log memory usage after backward pass
             if global_step < 5 and is_main and torch.cuda.is_available():
