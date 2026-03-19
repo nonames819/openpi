@@ -72,8 +72,8 @@ DEFAULT_CHECKPOINT: dict[EnvMode, Checkpoint] = {
     EnvMode.LIBERO: Checkpoint(
         config="pi05_libero",
         # dir="/inspire/hdd/project/autoregressive-video-generation/public/hdcao/chd/projects/openpi/ckpt_down/pi05_libero",
-        dir="/inspire/hdd/project/autoregressive-video-generation/public/hdcao/chd/projects/openpi/checkpoints/pi05_libero/my_experiment/29999",
-        # dir="/inspire/hdd/project/autoregressive-video-generation/public/hdcao/chd/projects/openpi/checkpoints/pi05_libero_pytorch/my_experiment/29999",
+        # dir="/inspire/hdd/project/autoregressive-video-generation/public/hdcao/chd/projects/openpi/checkpoints/pi05_libero/my_experiment/29999",
+        dir="/inspire/hdd/project/autoregressive-video-generation/public/hdcao/chd/projects/openpi/checkpoints/pi05_libero/my_experiment/20000",
     ),
 }
 
