@@ -16,10 +16,10 @@ default = true
 
 ## model
 pi05在ae部分使用adaRMS，不把state token作为输入
-原始pi0中state作为输入，但不能attend action，ar_mask可表示为0,0,0,0,1,1,0,0，对于input_mask 11011111, 
-对应mask就是
+原始pi0中state作为输入，但不能attend action，ar_mask可表示为0,0,0,0,1,1,0,0(连续1表示casual，100*表示内部bidirectional)，对于input_mask 11011111(去掉无效输入), 
+对应mask就是，这不是真实情况，只是举个例子
 ```
-Key ID:  0  1  2  3 | 4 | 5  6  7
+       Key ID:  0  1  2  3 | 4 | 5  6  7
 Query ID: 0    [1, 1, 0, 1,  0,  0, 0, 0]  (第2行、列变为0)
           1    [1, 1, 0, 1,  0,  0, 0, 0]
           2    [0, 0, 0, 0,  0,  0, 0, 0] 

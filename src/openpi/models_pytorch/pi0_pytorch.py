@@ -354,7 +354,7 @@ class PI0Pytorch(nn.Module):
                 inputs_embeds=[prefix_embs, suffix_embs],
                 use_cache=False,
                 adarms_cond=[None, adarms_cond],
-            )
+            ) # only acquire AE output
             return suffix_out
 
         suffix_out = self._apply_checkpoint(

@@ -1,12 +1,57 @@
 {
 	"files": [
 		{
-			"path": "examples/libero/.venv/lib/python3.8/site-packages/robosuite/controllers/osc.py",
+			"path": "src/openpi/training/config.py",
 			"bookmarks": [
 				{
-					"line": 115,
+					"line": 734,
 					"column": 0,
-					"label": ""
+					"label": "libero config"
+				}
+			]
+		},
+		{
+			"path": "scripts/train_pytorch.py",
+			"bookmarks": [
+				{
+					"line": 540,
+					"column": 0,
+					"label": "dataloader entry"
+				},
+				{
+					"line": 558,
+					"column": 0,
+					"label": "model entry"
+				}
+			]
+		},
+		{
+			"path": "src/openpi/training/data_loader.py",
+			"bookmarks": [
+				{
+					"line": 58,
+					"column": 0,
+					"label": "getitem"
+				}
+			]
+		},
+		{
+			"path": "src/openpi/models_pytorch/gemma_pytorch.py",
+			"bookmarks": [
+				{
+					"line": 126,
+					"column": 0,
+					"label": "this branch"
+				}
+			]
+		},
+		{
+			"path": ".venv/lib/python3.11/site-packages/transformers/models/gemma/modeling_gemma.py",
+			"bookmarks": [
+				{
+					"line": 149,
+					"column": 0,
+					"label": "rope"
 				}
 			]
 		}

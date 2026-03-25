@@ -61,4 +61,4 @@ tmux select-layout -t $SESSION_NAME tiled
 # =========================
 # attach session
 # =========================
-tmux attach -t $SESSION_NAME
+# tmux attach -t $SESSION_NAME

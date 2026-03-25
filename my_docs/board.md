@@ -15,7 +15,7 @@ uv run torchrun --standalone --nnodes=1 --nproc_per_node=2 scripts/train_pytorch
 
 uv run torchrun --standalone --nnodes=1 --nproc_per_node=4 scripts/train_pytorch.py pi05_libero --save_interval=500 --exp_name=pi05_libero_pytorch --resume
 
-uv run torchrun --standalone --nnodes=1 --nproc_per_node=8 scripts/train_pytorch.py pi05_libero --save_interval=500 --exp_name=pi05_libero_pytorch_8gpu_bs256
+uv run torchrun --standalone --nnodes=1 --nproc_per_node=8 scripts/train_pytorch.py pi05_libero --save_interval=500 --exp_name=pi05_libero_pytorch_8gpu_bs256 --resume
 
 ## debug
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.9 uv run scripts/train.py pi05_libero --exp-name=debug_pi05_libero 
@@ -36,14 +36,27 @@ uv run examples/convert_jax_model_to_pytorch.py \
 # eval 
 
 ## libero
+
+* eval 4 suites (modify ckpt path in serve_policy)
+bash bash_scripts/eval_4suites.sh
+
 ```
 # Run the simulation (pick this and set export MUJOCO_GL=osmesa)
 source examples/libero/.venv/bin/activate
 MUJOCO_GL=osmesa PYTHONPATH=$PWD/third_party/libero python examples/libero/eval_with_log.py
 
+MUJOCO_GL=osmesa PYTHONPATH=$PWD/third_party/libero python examples/libero/eval_with_log.py --task_suite_name="libero_10"
+
 # Run the server (modify config in python file to select path)
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.7 CUDA_VISIBLE_DEVICES=0 uv run scripts/serve_policy.py --env LIBERO
 
+XLA_PYTHON_CLIENT_MEM_FRACTION=0.5 uv run scripts/serve_policy.py policy:checkpoint --policy.config=pi05_libero --policy.dir=checkpoints/pi05_libero/my_experiment/29999
+
+# my bash
+bash bash_scripts/eval_libero_tmux.sh 0 8000 libero_spatial
+bash bash_scripts/eval_libero_tmux.sh 1 8001 libero_object
+bash bash_scripts/eval_libero_tmux.sh 2 8002 libero_goal
+bash bash_scripts/eval_libero_tmux.sh 3 8003 libero_10
 
 
 # below are official instructions

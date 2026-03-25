@@ -32,7 +32,7 @@ class Args:
     #################################################################################################################
     # LIBERO environment-specific parameters
     #################################################################################################################
-    task_suite_name: str = "libero_10"
+    task_suite_name: str = "libero_10" # Task suite. Options: libero_spatial, libero_object, libero_goal, libero_10, libero_90
     num_steps_wait: int = 10
     num_trials_per_task: int = 50
 
@@ -203,24 +203,47 @@ if __name__ == "__main__":
     client = _websocket_client_policy.WebsocketClientPolicy(args.host, args.port)
     metadata = client.get_server_metadata()
     checkpoint_dir = pathlib.Path(metadata['checkpoint_dir'])
-    logging.info("Eval ckpt:", checkpoint_dir)
 
     # 构建输出目录
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     output_dir = checkpoint_dir / "eval" / f"{timestamp}_{args.task_suite_name}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 配置日志
+    # 配置日志（必须在第一次 logging 调用之前完成）
     log_file = output_dir / args.log_name
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_file, mode='w'),
-            logging.StreamHandler()
-        ]
-    )
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format="%(asctime)s - %(levelname)s - %(message)s",
+    #     handlers=[
+    #         logging.FileHandler(log_file, mode="w"),
+    #         logging.StreamHandler(),
+    #     ],
+    # )
+    logger = logging.getLogger()
 
+    # 清除所有已存在的 handler
+    logger.handlers.clear()
+
+    # 设置日志级别
+    logger.setLevel(logging.INFO)
+
+    # 创建 handler
+    file_handler = logging.FileHandler(log_file, mode="w")
+    stream_handler = logging.StreamHandler()
+
+    # 设置格式
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
+
+    # 添加 handler
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+
+    # 测试
+    logger.info("Logging now works!")
+
+    logging.info(f"Eval ckpt: {checkpoint_dir}")
     logging.info(f"Output directory: {output_dir}")
     logging.info(f"Log file: {log_file}")
     logging.info(f"Experiment arguments: {args}")

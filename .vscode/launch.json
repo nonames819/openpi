@@ -10,8 +10,9 @@
             "request": "launch",
             "program": "${workspaceFolder}/scripts/train.py",
             "args": [
-                "pi05_libero_debug",
+                "pi05_libero",
                 "--exp-name=debug_pi05_libero",
+                "--batch_size=4",
                 "--overwrite"
             ],
             "env": {
@@ -29,14 +30,15 @@
                 "pi05_libero",
                 "--exp-name=pi05_libero_pytorch_1gpu_debug",
                 "--save_interval=100",
-                "--batch_size=256",
+                "--batch_size=4",
                 "--overwrite"
             ],
             "env":{
-                "CUDA_VISIBLE_DEVICES":"1",
+                "CUDA_VISIBLE_DEVICES":"0",
+                "PYDEVD_WARN_SLOW_RESOLVE_TIMEOUT": "2.0"
             },
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": false
         },
         {
             "name": "Debug train torch (DDP)",
@@ -78,6 +80,7 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/examples/libero/eval_with_log.py",
+            // "program": "${workspaceFolder}/examples/libero/main.py",
             "console": "integratedTerminal",
             "python": "${workspaceFolder}/examples/libero/.venv/bin/python",
             "env": {
